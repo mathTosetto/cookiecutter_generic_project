@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def load_data():
     # This is a placeholder.
     return pd.DataFrame(
