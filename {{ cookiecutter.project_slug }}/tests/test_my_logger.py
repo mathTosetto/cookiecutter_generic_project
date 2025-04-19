@@ -4,6 +4,7 @@ import pytest
 import logging
 
 from pathlib import Path
+from typing import Dict, List, Any
 from unittest.mock import patch
 from datetime import datetime, timezone
 
@@ -18,7 +19,7 @@ def mock_logs_dir(tmp_path):
 @pytest.fixture
 def mock_config_file(tmp_path):
     """Fixture to create a temporary mock config file with valid JSON."""
-    mock_config = {
+    mock_config: Dict[str, int | bool | str | List[str]] = {
         "version": 1,
         "disable_existing_loggers": False,
         "handlers": {
@@ -43,7 +44,7 @@ def mock_config_file(tmp_path):
         },
     }
 
-    config_file = tmp_path / "logging_config.json"
+    config_file: Path = tmp_path / "logging_config.json"
 
     with open(config_file, "w") as f:
         json.dump(mock_config, f)
@@ -54,7 +55,7 @@ def mock_config_file(tmp_path):
 @pytest.fixture
 def log_record():
     """Fixture to create a sample log record"""
-    record = logging.LogRecord(
+    record: logging.LogRecord = logging.LogRecord(
         name="test_logger",
         level=logging.INFO,
         pathname="test_path",
@@ -75,13 +76,13 @@ def test_create_logs_folder(monkeypatch, mock_logs_dir):
         lambda path: mock_logs_dir if path == "logs" else Path(path),
     )
 
-    # Asserts
+    # Assertions
     assert not mock_logs_dir.exists()
 
     # Call function
     LoggerSetup()
 
-    # Asserts
+    # Assertions
     assert mock_logs_dir.exists()
 
 
@@ -89,45 +90,45 @@ def test_create_logs_folder(monkeypatch, mock_logs_dir):
 def test_setup_logging(mock_dict_config, mock_config_file):
     """Test the setup_logging function."""
     # Call function
-    loggeer_setup = LoggerSetup(config_path=mock_config_file)
+    LoggerSetup(config_path=mock_config_file)
 
-    # Asserts
+    # Assertions
     with open(mock_config_file) as f:
-        mock_config = json.load(f)
+        mock_config: Dict[str, int | bool | str | List[str]] = json.load(f)
     mock_dict_config.assert_called_once_with(config=mock_config)
 
 
 def test_init_with_custom_fmt_keys():
     """Test if fmt_keys are initialized properly"""
     # Parameters
-    fmt_keys = {"msg": "message", "time": "timestamp"}
+    fmt_keys: Dict[str, str] = {"msg": "message", "time": "timestamp"}
 
     # Call function
-    formatter = MyJSONFormatter(fmt_keys=fmt_keys)
+    formatter: MyJSONFormatter = MyJSONFormatter(fmt_keys=fmt_keys)
 
-    # Asserts
+    # Assertions
     assert formatter.fmt_keys == fmt_keys
 
 
 def test_init_with_default_fmt_keys():
     """Test if fmt_keys default to an empty dictionary when not provided"""
     # Call function
-    formatter = MyJSONFormatter()
+    formatter: MyJSONFormatter = MyJSONFormatter()
 
-    # Asserts
+    # Assertions
     assert formatter.fmt_keys == {}
 
 
 def test_prepare_log_dict(log_record):
     """Test if log dictionary is prepared correctly"""
     # Parameters
-    fmt_keys = {"msg": "message", "time": "timestamp"}
+    fmt_keys: Dict[str, str] = {"msg": "message", "time": "timestamp"}
 
     # Call function
-    formatter = MyJSONFormatter(fmt_keys=fmt_keys)
-    log_dict = formatter._prepare_log_dict(log_record)
+    formatter: MyJSONFormatter = MyJSONFormatter(fmt_keys=fmt_keys)
+    log_dict: Dict[str, str | Any] = formatter._prepare_log_dict(log_record)
 
-    # Asserts
+    # Assertions
     assert "msg" in log_dict
     assert log_dict["msg"] == "Test log message"
 
@@ -141,15 +142,15 @@ def test_prepare_log_dict(log_record):
 def test_format(log_record):
     """Test if format method correctly converts log record to JSON"""
     # Parameters
-    fmt_keys = {"msg": "message", "time": "timestamp"}
+    fmt_keys: Dict[str, str] = {"msg": "message", "time": "timestamp"}
 
     # Call function
     formatter = MyJSONFormatter(fmt_keys=fmt_keys)
 
-    formatted_log = formatter.format(log_record)
-    log_json = json.loads(formatted_log)
+    formatted_log: MyJSONFormatter = formatter.format(log_record)
+    log_json: Dict[str, str | Any] = json.loads(formatted_log)
 
-    # Asserts
+    # Assertions
     assert log_json["msg"] == "Test log message"
     assert (
         log_json["time"]
@@ -165,7 +166,7 @@ def test_format_with_exception():
     except ValueError:
         exc_info = sys.exc_info()
 
-        log_record = logging.LogRecord(
+        log_record: logging.LogRecord = logging.LogRecord(
             name="test_logger",
             level=logging.ERROR,
             pathname="test_path",
@@ -176,11 +177,11 @@ def test_format_with_exception():
         )
 
         # Call function
-        formatter = MyJSONFormatter()
-        formatted_log = formatter.format(log_record)
-        log_json = json.loads(formatted_log)
+        formatter: MyJSONFormatter = MyJSONFormatter()
+        formatted_log: MyJSONFormatter = formatter.format(log_record)
+        log_json: Dict[str, str | Any] = json.loads(formatted_log)
 
-        # Asserts
+        # Assertions
         assert "exc_info" in log_json
         assert "ValueError" in log_json["exc_info"]
         assert "Test exception" in log_json["exc_info"]
@@ -192,9 +193,9 @@ def test_format_with_stack_info(log_record):
     log_record.stack_info = "Test stack trace"
 
     # Call function
-    formatter = MyJSONFormatter()
-    formatted_log = formatter.format(log_record)
-    log_json = json.loads(formatted_log)
+    formatter: MyJSONFormatter = MyJSONFormatter()
+    formatted_log: MyJSONFormatter = formatter.format(log_record)
+    log_json: Dict[str, str | Any] = json.loads(formatted_log)
 
     # Assserts
     assert "stack_info" in log_json
